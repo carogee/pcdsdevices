@@ -523,3 +523,25 @@ class Gen1VonHamos4Crystal(BaseInterface, GroupDevice):
     cr4 = Cpt(Gen1VonHamosCrystal, '', trans_axis=':05', yaw_axis=':09', pitch_axis=':13' , kind='normal', name='Crystal 4')
 
 
+class DCCMono(BaseInterface, GroupDevice):
+    """
+    Double Channel Cut Monochrometer controlled with a Beckhoff PLC.
+    This includes five axes in total:
+        - 2 for crystal manipulation (TH1/Upstream and TH2/Downstream)
+        - 1 for chamber translation in x direction (TX)
+        - 2 for YAG diagnostics (TXD and TYD)
+
+    Parameters
+    ----------
+    prefix : str,optional
+        Base PV for DCCM motors
+    name : str
+        A name or alias to refer to the device.
+    """
+
+    tab_component_names = True
+    th1 = Cpt(BeckhoffAxis, ":MMS:TH1", doc="Bragg Upstream/TH1 Axis", kind="normal")
+    th2 = Cpt(BeckhoffAxis, ":MMS:TH2", doc="Bragg Downstream/TH2 Axis", kind="normal")
+    tx = Cpt(BeckhoffAxis, ":MMS:TX", doc="Translation X Axis", kind="normal")
+    txd = Cpt(BeckhoffAxis, ":MMS:TXD", doc="YAG Diagnostic X Axis", kind="normal")
+    tyd = Cpt(BeckhoffAxis, ":MMS:TYD", doc="YAG Diagnostic Y Axis", kind="normal")
