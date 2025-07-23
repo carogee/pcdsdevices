@@ -898,7 +898,7 @@ class FltMvInterface(MvInterface):
         """
         self.set_current_position(position)
 
-
+import numpy as np
 def setup_preset_paths(**paths):
     """
     Prepare the :class:`Presets` class.
@@ -912,12 +912,21 @@ def setup_preset_paths(**paths):
         directories that contain the yaml files that define the preset
         positions.
     """
-
     Presets._paths = {}
     for k, v in paths.items():
         Presets._paths[k] = Path(v)
+    print(f">> starting presets sync @ {time.monotonic()}")
+    preset_names = []
+    preset_times = []
     for preset in Presets._registry:
+        preset_names.append(preset.name)
+        ts = time.monotonic()
         preset.sync()
+        preset_times.append(time.monotonic() - ts)
+    print(f">> finished presets sync @ {time.monotonic()}")
+    print(f">> loaded {len(preset_names)} in avg: {np.mean(preset_times)}s,"
+          f"std: {np.std(preset_times)}s")
+    print(preset_names)
 
 
 class Presets:

@@ -51,6 +51,7 @@ from pcdsdevices.sequencer import EventSequencer  # for evt sequence
 if typing.TYPE_CHECKING:
     import matplotlib  # noqa
 
+#seq2 = EventSequencer('ECS:SYS0:10', name='seq_10')  # for laser drop shot
 seq2 = EventSequencer('ECS:SYS0:11', name='seq_11')  # for laser drop shot
 print("seq2", seq2)
 
@@ -451,26 +452,38 @@ class LaserTiming(FltMvInterface, PVPositioner):
 Virtual Motor {self.verbose_name} {self.prefix}
 Current position (user, dial): {position} [{units}] {dial_pos} [s]
 """
-        
+
+
+#    def move(self, *args, atol=0.1, wait_ctr=True, **kwargs):
+#        return super().move(*args, **kwargs)
+
 
     def move(self, *args, atol=0.1, wait_ctr=True, **kwargs):  # Needed to modify for stopping drop shot during the motion
-        if (lasevrstat() == 88):  # check current laser trigger, if with EVR 40, nothing happens                                                   
-            ongoingseq = seq2.sequence.get_seq()  # check current event sequence                                                                   
-            prepare_seq(lasmode=1)  # change only 90                                                                                               
-            seq2.start()                                                                                                                           
-            time.sleep(0.01)                                                                                                                       
-        st = super().move(*args, **kwargs)                                                                                                         
-        if wait_ctr:                                                                                                                               
-            time.sleep(0.01)                                                                                                                       
-            while np.abs(self._fs_tgt_time.get()- self._fs_ctr_time.get()) > atol:                                                                                        
-                print(f'Diff: {self._fs_tgt_time.get() - self._fs_ctr_time.get()}')                                                                
-                time.sleep(0.1)                                                                                                                    
-        time.sleep(0.01)                                                                                                                           
-        if (lasevrstat() == 88):                                                                                                                   
-            prepare_seq(lasmode=0, shot_sequence = ongoingseq)  #put back to the original event sequence                                           
-            seq2.start() # start event sequence again                                                                                              
-            #st.set_finished()                                                                                                                     
-        return st
+        try:
+            if (lasevrstat() == 88):  # check current laser trigger, if with EVR 40, nothing happens
+                ongoingseq = seq2.sequence.get_seq()  # check current event sequence
+                prepare_seq(lasmode=1)  # change only 90
+                seq2.start()
+                time.sleep(0.01)
+            st = super().move(*args, **kwargs)
+            if wait_ctr:
+                time.sleep(0.01)
+                while np.abs(self._fs_tgt_time.get()- self._fs_ctr_time.get()) > atol:
+                    print(f'Diff: {self._fs_tgt_time.get() - self._fs_ctr_time.get()}')
+                    time.sleep(0.1)
+            time.sleep(0.01)
+            if (lasevrstat() == 88):
+                prepare_seq(lasmode=0, shot_sequence = ongoingseq)  #put back to the original event sequence
+                seq2.start() # start event sequence again
+                #st.set_finished()
+            return st
+
+        except KeyboardInterrupt:
+            prepare_seq(lasmode=0, shot_sequence = ongoingseq)  #put back to the original event sequence
+            print("stopping run")
+            seq2.stop()
+            self.stop()
+    
 
 class Lcls2LaserTiming(FltMvInterface, PVPositioner):
     """
