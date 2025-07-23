@@ -12,6 +12,7 @@ import enum
 import logging
 import time
 import typing
+from typing import Optional
 from collections import namedtuple
 
 import numpy as np
@@ -137,9 +138,9 @@ class DCCMEnergyWithVernier(DCCMEnergy):
 
     Moves the DCCM theta based on the requested energy using the values
     of the calculation constants, and reports the current energy
-    based on the alio's position.
+    based on the motor's position.
 
-    Also moves the vernier when a move is requested to the alio.
+    Also moves the vernier when a move is requested to the DCCM motor.
     Note that the vernier is in units of eV, while the energy
     calculations are in units of keV.
 
@@ -162,10 +163,22 @@ class DCCMEnergyWithVernier(DCCMEnergy):
     def __init__(
         self,
         prefix: str,
-        hutch = 'XCS',
+        hutch: Optional[str] = None,
         **kwargs
     ):
-        self.hutch=hutch
+        # Determine which hutch to use
+        if hutch is not None:
+            self.hutch = hutch
+        elif 'CXI' in prefix:
+            self.hutch = 'CXI'
+        elif 'MEC' in prefix:
+            self.hutch = 'MEC'
+        elif 'MFX' in prefix:
+            self.hutch = 'MFX'
+        elif 'XCS' in prefix:
+            self.hutch = 'XCS'
+        else:
+            self.hutch = 'TST'
         super().__init__(prefix, **kwargs)
 
     def forward(self, pseudo_pos: namedtuple) -> namedtuple:
