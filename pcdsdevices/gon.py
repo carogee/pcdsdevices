@@ -202,6 +202,50 @@ def Goniometer(**kwargs):
         return BaseGon(**kwargs)
 
 
+class XYZStage(BaseInterface, GroupDevice):
+    """
+    Sample XYZ stage.
+
+    Parameters
+    ----------
+    name : str
+        A name to refer to the device
+
+    prefix_x : str
+        The EPICS base PV of the sample-stage's x motor.
+
+    prefix_y : str
+        The EPICS base PV of the sample-stage's y motor.
+
+    prefix_z : str
+        The EPICS base PV of the sample-stage's z motor.
+    """
+
+    x = FCpt(IMS, '{self._prefix_x}', kind='normal')
+    y = FCpt(IMS, '{self._prefix_y}', kind='normal')
+    z = FCpt(IMS, '{self._prefix_z}', kind='normal')
+
+    tab_component_names = True
+
+    def __init__(self, *, name, prefix_x, prefix_y, prefix_z, **kwargs):
+        self._prefix_x = prefix_x
+        self._prefix_y = prefix_y
+        self._prefix_z = prefix_z
+        super().__init__('', name=name, **kwargs)
+
+    def format_status_info(self, status_info):
+        """Override status info handler to render the `XYZStage`."""
+        x = get_status_float(status_info, 'x', 'position')
+        y = get_status_float(status_info, 'y', 'position')
+        z = get_status_float(status_info, 'z', 'position')
+        units = get_status_value(status_info, 'x', 'user_setpoint', 'units')
+
+        return f"""\
+XYZStage
+X, Y, Z: {x}, {y}, {z} [{units}]
+"""
+
+
 class SamPhi(BaseInterface, GroupDevice):
     """
     Sample Phi stage.
